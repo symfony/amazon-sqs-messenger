@@ -15,6 +15,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\Messenger\Transport\TransportFactoryInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * @author Jérémy Derussé <jeremy@derusse.com>
@@ -22,17 +23,19 @@ use Symfony\Component\Messenger\Transport\TransportInterface;
 class AmazonSqsTransportFactory implements TransportFactoryInterface
 {
     private ?LoggerInterface $logger;
+    private ?HttpClientInterface $httpClient;
 
-    public function __construct(LoggerInterface $logger = null)
+    public function __construct(LoggerInterface $logger = null, HttpClientInterface $httpClient = null)
     {
         $this->logger = $logger;
+        $this->httpClient = $httpClient;
     }
 
     public function createTransport(string $dsn, array $options, SerializerInterface $serializer): TransportInterface
     {
         unset($options['transport_name']);
 
-        return new AmazonSqsTransport(Connection::fromDsn($dsn, $options, null, $this->logger), $serializer);
+        return new AmazonSqsTransport(Connection::fromDsn($dsn, $options, $this->httpClient, $this->logger), $serializer);
     }
 
     public function supports(string $dsn, array $options): bool
