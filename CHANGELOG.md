@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+7.3
+---
+
+ * Add new `queue_attributes` and `queue_tags` options for SQS queue creation
+
 7.2
 ---
 
