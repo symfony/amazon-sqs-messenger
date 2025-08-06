@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+7.4
+---
+
+* Allow SQS to handle it's own retry/DLQ
+
 7.3
 ---
 
