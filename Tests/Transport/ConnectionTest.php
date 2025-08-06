@@ -372,6 +372,35 @@ class ConnectionTest extends TestCase
         $connection->keepalive($id);
     }
 
+    public function testDeleteOnReject()
+    {
+        $expectedParams = [
+            'QueueUrl' => $queueUrl = 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
+            'ReceiptHandle' => $id = 'abc',
+        ];
+
+        $client = $this->createMock(SqsClient::class);
+        $client->expects($this->once())->method('deleteMessage')->with($expectedParams);
+
+        $connection = new Connection([], $client, $queueUrl);
+        $connection->reject($id);
+    }
+
+    public function testDoNotDeleteOnRejection()
+    {
+        $expectedParams = [
+            'QueueUrl' => $queueUrl = 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
+            'ReceiptHandle' => $id = 'abc',
+            'VisibilityTimeout' => $visibilityTimeout = 10,
+        ];
+
+        $client = $this->createMock(SqsClient::class);
+        $client->expects($this->once())->method('changeMessageVisibility')->with($expectedParams);
+
+        $connection = new Connection(['delete_on_rejection' => false, 'visibility_timeout' => $visibilityTimeout], $client, $queueUrl);
+        $connection->reject($id);
+    }
+
     public function testKeepaliveWithTooSmallTtl()
     {
         $client = $this->createMock(SqsClient::class);
