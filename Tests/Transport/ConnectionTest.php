@@ -391,13 +391,28 @@ class ConnectionTest extends TestCase
         $expectedParams = [
             'QueueUrl' => $queueUrl = 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
             'ReceiptHandle' => $id = 'abc',
-            'VisibilityTimeout' => $visibilityTimeout = 10,
+            'VisibilityTimeout' => 0,
         ];
 
         $client = $this->createMock(SqsClient::class);
         $client->expects($this->once())->method('changeMessageVisibility')->with($expectedParams);
 
-        $connection = new Connection(['delete_on_rejection' => false, 'visibility_timeout' => $visibilityTimeout], $client, $queueUrl);
+        $connection = new Connection(['delete_on_rejection' => false, 'visibility_timeout' => 30], $client, $queueUrl);
+        $connection->reject($id);
+    }
+
+    public function testDoNotDeleteOnRejectionWithRetryDelay()
+    {
+        $expectedParams = [
+            'QueueUrl' => $queueUrl = 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
+            'ReceiptHandle' => $id = 'abc',
+            'VisibilityTimeout' => $retryDelay = 5,
+        ];
+
+        $client = $this->createMock(SqsClient::class);
+        $client->expects($this->once())->method('changeMessageVisibility')->with($expectedParams);
+
+        $connection = new Connection(['delete_on_rejection' => false, 'retry_delay' => $retryDelay], $client, $queueUrl);
         $connection->reject($id);
     }
 
