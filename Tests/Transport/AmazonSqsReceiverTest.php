@@ -40,20 +40,20 @@ class AmazonSqsReceiverTest extends TestCase
         $this->assertEquals(new DummyMessage('Hi'), $actualEnvelopes[0]->getMessage());
     }
 
-    public function testItRejectTheMessageIfThereIsAMessageDecodingFailedException()
+    public function testItReturnsSerializedEnvelopeWhenDecodingFails()
     {
-        $this->expectException(MessageDecodingFailedException::class);
-
         $serializer = $this->createStub(PhpSerializer::class);
         $serializer->method('decode')->willThrowException(new MessageDecodingFailedException());
 
         $sqsEnvelop = $this->createSqsEnvelope();
-        $connection = $this->createMock(Connection::class);
+        $connection = $this->createStub(Connection::class);
         $connection->method('get')->willReturn($sqsEnvelop);
-        $connection->expects($this->once())->method('reject');
 
         $receiver = new AmazonSqsReceiver($connection, $serializer);
-        iterator_to_array($receiver->get());
+        $envelopes = iterator_to_array($receiver->get());
+
+        $this->assertCount(1, $envelopes);
+        $this->assertInstanceOf(MessageDecodingFailedException::class, $envelopes[0]->getMessage());
     }
 
     public function testKeepalive()
