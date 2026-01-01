@@ -114,17 +114,20 @@ class AmazonSqsTransportTest extends TestCase
 
     public function testItSendsAMessageViaTheSenderWithRedeliveryStamp()
     {
+        $sender = $this->createMock(SenderInterface::class);
+        $transport = $this->getTransport(null, null, null, $sender);
         $envelope = new Envelope(new \stdClass(), [new RedeliveryStamp(1)]);
-        $this->sender->expects($this->once())->method('send')->with($envelope)->willReturn($envelope);
-        $this->assertSame($envelope, $this->transport->send($envelope));
+        $sender->expects($this->once())->method('send')->with($envelope)->willReturn($envelope);
+        $this->assertSame($envelope, $transport->send($envelope));
     }
 
     public function testItDoesNotSendRedeliveredMessageWhenNotHandlingRetries()
     {
-        $transport = new AmazonSqsTransport($this->connection, null, $this->receiver, $this->sender, false);
+        $sender = $this->createMock(SenderInterface::class);
+        $transport = $this->getTransport(null, null, null, $sender, false);
 
         $envelope = new Envelope(new \stdClass(), [new RedeliveryStamp(1)]);
-        $this->sender->expects($this->never())->method('send')->with($envelope)->willReturn($envelope);
+        $sender->expects($this->never())->method('send')->with($envelope)->willReturn($envelope);
         $this->assertSame($envelope, $transport->send($envelope));
     }
 
@@ -197,12 +200,12 @@ class AmazonSqsTransportTest extends TestCase
         $transport->keepalive(new Envelope(new DummyMessage('foo'), [new AmazonSqsReceivedStamp('123')]));
     }
 
-    private function getTransport(?SerializerInterface $serializer = null, ?Connection $connection = null, ?ReceiverInterface $receiver = null, ?SenderInterface $sender = null)
+    private function getTransport(?SerializerInterface $serializer = null, ?Connection $connection = null, ?ReceiverInterface $receiver = null, ?SenderInterface $sender = null, bool $handleRetries = true)
     {
         $serializer ??= $this->createStub(SerializerInterface::class);
         $connection ??= $this->createStub(Connection::class);
 
-        return new AmazonSqsTransport($connection, $serializer, $receiver, $sender);
+        return new AmazonSqsTransport($connection, $serializer, $receiver, $sender, $handleRetries);
     }
 
     private function createHttpException(): HttpException
