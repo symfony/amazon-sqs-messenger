@@ -50,7 +50,7 @@ class ConnectionTest extends TestCase
         $awsKey = 'some_aws_access_key_value';
         $awsSecret = 'some_aws_secret_value';
         $region = 'eu-west-1';
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => $region, 'accessKeyId' => $awsKey, 'accessKeySecret' => $awsSecret], null, $httpClient)),
             Connection::fromDsn('sqs://default/queue', [
@@ -67,7 +67,7 @@ class ConnectionTest extends TestCase
         $awsSecret = 'some_aws_secret_value';
         $sessionToken = 'some_aws_sessionToken';
         $region = 'eu-west-1';
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => $region, 'accessKeyId' => $awsKey, 'accessKeySecret' => $awsSecret, 'sessionToken' => $sessionToken], null, $httpClient)),
             Connection::fromDsn('sqs://default/queue', [
@@ -89,7 +89,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsn()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => 'eu-west-1', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
             Connection::fromDsn('sqs://default/queue', [], $httpClient)
@@ -98,7 +98,7 @@ class ConnectionTest extends TestCase
 
     public function testDsnPrecedence()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue_dsn'], new SqsClient(['region' => 'us-east-2', 'accessKeyId' => 'key_dsn', 'accessKeySecret' => 'secret_dsn'], null, $httpClient)),
             Connection::fromDsn('sqs://key_dsn:secret_dsn@default/queue_dsn?region=us-east-2', ['region' => 'eu-west-3', 'queue_name' => 'queue_options', 'access_key' => 'key_option', 'secret_key' => 'secret_option'], $httpClient)
@@ -107,7 +107,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithRegion()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => 'us-west-2', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
             Connection::fromDsn('sqs://default/queue?region=us-west-2', [], $httpClient)
@@ -116,7 +116,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnAsQueueUrl()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'ab1-MyQueue-A2BCDEF3GHI4', 'account' => '123456789012'], new SqsClient(['region' => 'us-east-2', 'endpoint' => 'https://sqs.us-east-2.amazonaws.com', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient), 'https://sqs.us-east-2.amazonaws.com/123456789012/ab1-MyQueue-A2BCDEF3GHI4'),
             Connection::fromDsn('https://sqs.us-east-2.amazonaws.com/123456789012/ab1-MyQueue-A2BCDEF3GHI4', [], $httpClient)
@@ -125,7 +125,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithCustomEndpoint()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => 'eu-west-1', 'endpoint' => 'https://localhost', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
             Connection::fromDsn('sqs://localhost/queue', [], $httpClient)
@@ -134,7 +134,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithSslMode()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => 'eu-west-1', 'endpoint' => 'http://localhost', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
             Connection::fromDsn('sqs://localhost/queue?sslmode=disable', [], $httpClient)
@@ -143,7 +143,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithSslModeOnDefault()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => 'eu-west-1', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
             Connection::fromDsn('sqs://default/queue?sslmode=disable', [], $httpClient)
@@ -152,7 +152,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithCustomEndpointAndPort()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => 'eu-west-1', 'endpoint' => 'https://localhost:1234', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
             Connection::fromDsn('sqs://localhost:1234/queue', [], $httpClient)
@@ -161,7 +161,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithOptions()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['account' => '213', 'queue_name' => 'queue', 'buffer_size' => 1, 'wait_time' => 5, 'auto_setup' => false], new SqsClient(['region' => 'eu-west-1', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
             Connection::fromDsn('sqs://default/213/queue', ['buffer_size' => 1, 'wait_time' => 5, 'auto_setup' => false], $httpClient)
@@ -170,7 +170,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithQueryOptions()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
         $this->assertEquals(
             new Connection(['account' => '213', 'queue_name' => 'queue', 'buffer_size' => 1, 'wait_time' => 5, 'auto_setup' => false], new SqsClient(['region' => 'eu-west-1', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
             Connection::fromDsn('sqs://default/213/queue?buffer_size=1&wait_time=5&auto_setup=0', [], $httpClient)
@@ -179,7 +179,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithQueueNameOption()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
 
         $this->assertEquals(
             new Connection(['queue_name' => 'queue'], new SqsClient(['region' => 'eu-west-1', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
@@ -194,7 +194,7 @@ class ConnectionTest extends TestCase
 
     public function testFromDsnWithAccountAndEndpointOption()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
 
         $this->assertEquals(
             new Connection(['account' => 12345], new SqsClient(['endpoint' => 'https://custom-endpoint.tld', 'region' => 'eu-west-1', 'accessKeyId' => null, 'accessKeySecret' => null], null, $httpClient)),
@@ -276,8 +276,8 @@ class ConnectionTest extends TestCase
         $this->expectException(HttpException::class);
         $this->expectExceptionMessage('SQS error happens');
 
-        $client = $this->createMock(SqsClient::class);
-        $client->expects($this->any())
+        $client = $this->createStub(SqsClient::class);
+        $client
             ->method('getQueueUrl')
             ->with(['QueueName' => 'queue', 'QueueOwnerAWSAccountId' => 123])
             ->willReturn(ResultMockFactory::createFailing(GetQueueUrlResult::class, 400, 'SQS error happens'));
