@@ -30,7 +30,7 @@ class AmazonSqsSenderTest extends TestCase
         $connection = $this->createMock(Connection::class);
         $connection->expects($this->once())->method('send')->with($encoded['body'], $encoded['headers']);
 
-        $serializer = $this->createMock(SerializerInterface::class);
+        $serializer = $this->createStub(SerializerInterface::class);
         $serializer->method('encode')->with($envelope)->willReturn($encoded);
 
         $sender = new AmazonSqsSender($connection, $serializer);
@@ -48,7 +48,7 @@ class AmazonSqsSenderTest extends TestCase
         $connection->expects($this->once())->method('send')
             ->with($encoded['body'], $encoded['headers'], 0, $stamp->getMessageGroupId(), $stamp->getMessageDeduplicationId());
 
-        $serializer = $this->createMock(SerializerInterface::class);
+        $serializer = $this->createStub(SerializerInterface::class);
         $serializer->method('encode')->with($envelope)->willReturn($encoded);
 
         $sender = new AmazonSqsSender($connection, $serializer);
@@ -66,7 +66,7 @@ class AmazonSqsSenderTest extends TestCase
         $connection->expects($this->once())->method('send')
             ->with($encoded['body'], $encoded['headers'], 0, null, null, $stamp->getTraceId());
 
-        $serializer = $this->createMock(SerializerInterface::class);
+        $serializer = $this->createStub(SerializerInterface::class);
         $serializer->method('encode')->with($envelope)->willReturn($encoded);
 
         $sender = new AmazonSqsSender($connection, $serializer);
@@ -81,7 +81,7 @@ class AmazonSqsSenderTest extends TestCase
         $connection = $this->createMock(Connection::class);
         $connection->expects($this->once())->method('send')->with(base64_encode($encoded['body']), $encoded['headers']);
 
-        $serializer = $this->createMock(SerializerInterface::class);
+        $serializer = $this->createStub(SerializerInterface::class);
         $serializer->method('encode')->with($envelope)->willReturn($encoded);
 
         $sender = new AmazonSqsSender($connection, $serializer);
