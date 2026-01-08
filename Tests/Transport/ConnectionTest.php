@@ -27,7 +27,6 @@ use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\Messenger\Bridge\AmazonSqs\Transport\Connection;
 use Symfony\Component\Messenger\Exception\TransportException;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class ConnectionTest extends TestCase
 {
@@ -450,7 +449,7 @@ class ConnectionTest extends TestCase
 
     public function testQueueAttributesAndTagsFromDsn()
     {
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient = new MockHttpClient();
 
         $queueName = 'queueName';
         $queueAttributes = [
