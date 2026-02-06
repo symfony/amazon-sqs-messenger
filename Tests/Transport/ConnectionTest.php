@@ -275,8 +275,9 @@ class ConnectionTest extends TestCase
         $this->expectException(HttpException::class);
         $this->expectExceptionMessage('SQS error happens');
 
-        $client = $this->createStub(SqsClient::class);
+        $client = $this->createMock(SqsClient::class);
         $client
+            ->expects($this->once())
             ->method('getQueueUrl')
             ->with(['QueueName' => 'queue', 'QueueOwnerAWSAccountId' => 123])
             ->willReturn(ResultMockFactory::createFailing(GetQueueUrlResult::class, 400, 'SQS error happens'));
