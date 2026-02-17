@@ -228,10 +228,11 @@ class ConnectionTest extends TestCase
     public function testKeepGettingPendingMessages()
     {
         $client = $this->createMock(SqsClient::class);
-        $client->expects($this->any())
+        $client
             ->method('getQueueUrl')
-            ->with(['QueueName' => 'queue', 'QueueOwnerAWSAccountId' => 123])
-            ->willReturn(ResultMockFactory::create(GetQueueUrlResult::class, ['QueueUrl' => 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue']));
+            ->willReturnMap([
+                [['QueueName' => 'queue', 'QueueOwnerAWSAccountId' => 123], ResultMockFactory::create(GetQueueUrlResult::class, ['QueueUrl' => 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue'])],
+            ]);
 
         $firstResult = ResultMockFactory::create(ReceiveMessageResult::class, ['Messages' => [
             new Message(['MessageId' => 1, 'Body' => 'this is a test']),
