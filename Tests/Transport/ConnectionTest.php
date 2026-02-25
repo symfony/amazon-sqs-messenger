@@ -104,6 +104,15 @@ class ConnectionTest extends TestCase
         );
     }
 
+    public function testQueueNameDefault()
+    {
+        $httpClient = new MockHttpClient();
+        $this->assertEquals(
+            new Connection(['queue_name' => 'messages'], new SqsClient(['region' => 'us-east-2', 'accessKeyId' => 'key_dsn', 'accessKeySecret' => 'secret_dsn'], null, $httpClient)),
+            Connection::fromDsn('sqs://key_dsn:secret_dsn@default/?region=us-east-2', ['region' => 'eu-west-3', 'access_key' => 'key_option', 'secret_key' => 'secret_option'], $httpClient)
+        );
+    }
+
     public function testFromDsnWithRegion()
     {
         $httpClient = new MockHttpClient();
