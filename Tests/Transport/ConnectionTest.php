@@ -280,6 +280,48 @@ class ConnectionTest extends TestCase
         $this->assertNull($connection->get());
     }
 
+    public function testGetUsesMaxOfFetchSizeAndConfiguredBufferSize()
+    {
+        $client = $this->createMock(SqsClient::class);
+        $client
+            ->method('getQueueUrl')
+            ->willReturnMap([
+                [['QueueName' => 'queue', 'QueueOwnerAWSAccountId' => 123], ResultMockFactory::create(GetQueueUrlResult::class, ['QueueUrl' => 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue'])],
+            ]);
+
+        $firstResult = ResultMockFactory::create(ReceiveMessageResult::class, ['Messages' => [
+            new Message(['MessageId' => 1, 'Body' => 'this is a test']),
+        ]]);
+        $secondResult = ResultMockFactory::create(ReceiveMessageResult::class, ['Messages' => []]);
+
+        $series = [
+            [[['QueueUrl' => 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
+                'VisibilityTimeout' => null,
+                'MaxNumberOfMessages' => 12,
+                'MessageAttributeNames' => ['All'],
+                'WaitTimeSeconds' => 20]], $firstResult],
+            [[['QueueUrl' => 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
+                'VisibilityTimeout' => null,
+                'MaxNumberOfMessages' => 12,
+                'MessageAttributeNames' => ['All'],
+                'WaitTimeSeconds' => 20]], $secondResult],
+        ];
+
+        $client->expects($this->exactly(2))
+            ->method('receiveMessage')
+            ->willReturnCallback(function (...$args) use (&$series) {
+                [$expectedArgs, $return] = array_shift($series);
+                $this->assertSame($expectedArgs, $args);
+
+                return $return;
+            })
+        ;
+
+        $connection = new Connection(['queue_name' => 'queue', 'account' => 123, 'auto_setup' => false, 'buffer_size' => 9], $client);
+        $this->assertNotNull($connection->get(12));
+        $this->assertNull($connection->get(12));
+    }
+
     public function testUnexpectedSqsError()
     {
         $this->expectException(HttpException::class);

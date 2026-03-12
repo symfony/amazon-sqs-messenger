@@ -32,12 +32,50 @@ class AmazonSqsReceiverTest extends TestCase
 
         $sqsEnvelop = $this->createSqsEnvelope();
         $connection = $this->createStub(Connection::class);
-        $connection->method('get')->willReturn($sqsEnvelop);
+        $connection->method('get')->willReturn([$sqsEnvelop]);
 
         $receiver = new AmazonSqsReceiver($connection, $serializer);
         $actualEnvelopes = iterator_to_array($receiver->get());
         $this->assertCount(1, $actualEnvelopes);
         $this->assertEquals(new DummyMessage('Hi'), $actualEnvelopes[0]->getMessage());
+    }
+
+    public function testGetUsesFetchSizeWhenProvided()
+    {
+        $serializer = $this->createSerializer();
+
+        $sqsEnvelope = $this->createSqsEnvelope();
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())->method('get')->with(7)->willReturn([$sqsEnvelope]);
+
+        $receiver = new AmazonSqsReceiver($connection, $serializer);
+        $actualEnvelopes = iterator_to_array($receiver->get(7));
+
+        $this->assertCount(1, $actualEnvelopes);
+    }
+
+    public function testItReturnsMultipleDecodedMessagesWhenAvailable()
+    {
+        $serializer = $this->createSerializer();
+
+        $connection = $this->createStub(Connection::class);
+        $connection->method('get')->willReturn([
+            $this->createSqsEnvelope(),
+            [
+                'id' => 2,
+                'body' => '{"message": "Hello"}',
+                'headers' => [
+                    'type' => DummyMessage::class,
+                ],
+            ],
+        ]);
+
+        $receiver = new AmazonSqsReceiver($connection, $serializer);
+        $actualEnvelopes = iterator_to_array($receiver->get(2));
+
+        $this->assertCount(2, $actualEnvelopes);
+        $this->assertEquals(new DummyMessage('Hi'), $actualEnvelopes[0]->getMessage());
+        $this->assertEquals(new DummyMessage('Hello'), $actualEnvelopes[1]->getMessage());
     }
 
     public function testItReturnsSerializedEnvelopeWhenDecodingFails()
@@ -47,7 +85,7 @@ class AmazonSqsReceiverTest extends TestCase
 
         $sqsEnvelop = $this->createSqsEnvelope();
         $connection = $this->createStub(Connection::class);
-        $connection->method('get')->willReturn($sqsEnvelop);
+        $connection->method('get')->willReturn([$sqsEnvelop]);
 
         $receiver = new AmazonSqsReceiver($connection, $serializer);
         $envelopes = iterator_to_array($receiver->get());

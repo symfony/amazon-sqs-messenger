@@ -36,28 +36,35 @@ class AmazonSqsReceiver implements KeepaliveReceiverInterface, MessageCountAware
         $this->serializer = $serializer ?? new PhpSerializer();
     }
 
-    public function get(): iterable
+    /**
+     * @param int $fetchSize
+     */
+    public function get(/* int $fetchSize = 1 */): iterable
     {
+        $fetchSize = \func_num_args() > 0 ? max(1, func_get_arg(0)) : 1;
+
         try {
-            if (!$sqsEnvelope = $this->connection->get()) {
+            if (!$sqsEnvelopes = $this->connection->get($fetchSize)) {
                 return;
             }
         } catch (HttpException $e) {
             throw new TransportException($e->getMessage(), 0, $e);
         }
 
-        $stamps = [
-            new AmazonSqsReceivedStamp($sqsEnvelope['id']),
-            new TransportMessageIdStamp($sqsEnvelope['id']),
-        ];
+        foreach ($sqsEnvelopes as $sqsEnvelope) {
+            $stamps = [
+                new AmazonSqsReceivedStamp($sqsEnvelope['id']),
+                new TransportMessageIdStamp($sqsEnvelope['id']),
+            ];
 
-        try {
-            yield $this->serializer->decode($sqsEnvelope = [
-                'body' => $sqsEnvelope['body'],
-                'headers' => $sqsEnvelope['headers'],
-            ])->with(...$stamps);
-        } catch (MessageDecodingFailedException $e) {
-            yield MessageDecodingFailedException::wrap($sqsEnvelope, $e->getMessage(), $e->getCode(), $e)->with(...$stamps);
+            try {
+                yield $this->serializer->decode($sqsEnvelope = [
+                    'body' => $sqsEnvelope['body'],
+                    'headers' => $sqsEnvelope['headers'],
+                ])->with(...$stamps);
+            } catch (MessageDecodingFailedException $e) {
+                yield MessageDecodingFailedException::wrap($sqsEnvelope, $e->getMessage(), $e->getCode(), $e)->with(...$stamps);
+            }
         }
     }
 
