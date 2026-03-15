@@ -302,7 +302,7 @@ class ConnectionTest extends TestCase
                 'WaitTimeSeconds' => 20]], $firstResult],
             [[['QueueUrl' => 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
                 'VisibilityTimeout' => null,
-                'MaxNumberOfMessages' => 12,
+                'MaxNumberOfMessages' => 10,
                 'MessageAttributeNames' => ['All'],
                 'WaitTimeSeconds' => 20]], $secondResult],
         ];
